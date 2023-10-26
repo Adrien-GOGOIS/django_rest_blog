@@ -1,14 +1,40 @@
-from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import generics, permissions
+from posts.permissions import IsOwnerOrReadOnly
+from .models import Post, User, Comment
+from .serializers import PostSerializer, UserSerializer, CommentSerializer
 
-from .models import Post, User
-from .serializers import PostSerializer, UserSerializer
 
-
-class PostViewSet(viewsets.ModelViewSet):
-    serializer_class = PostSerializer
+class PostList(generics.ListCreateAPIView):
     queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class UserViewSet(viewsets.ModelViewSet):
-	serializer_class = UserSerializer
-	queryset = User.objects.all().order_by('-date_joined')
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class PostDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [
+        					permissions.IsAuthenticatedOrReadOnly,
+                          	IsOwnerOrReadOnly
+                        ]
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+      
+class CommentList(generics.ListCreateAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
