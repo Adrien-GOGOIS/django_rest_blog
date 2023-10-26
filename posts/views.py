@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions
 from posts.permissions import IsOwnerOrReadOnly
-from .models import Post, User, Comment
-from .serializers import PostSerializer, UserSerializer, CommentSerializer
+from .models import Post, User, Comment, Category
+from .serializers import PostSerializer, UserSerializer, CommentSerializer, CategorySerializer
 
 
 class PostList(generics.ListCreateAPIView):
@@ -38,3 +38,17 @@ class CommentList(generics.ListCreateAPIView):
 class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    
+class CategoryList(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+class CategoryDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+                          IsOwnerOrReadOnly]
